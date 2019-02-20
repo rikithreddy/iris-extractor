@@ -1,17 +1,15 @@
 import os
 import cv2
+import pickle
+import numpy
 import numpy as np 
 import matplotlib.pyplot as plt
-import pickle
-import scipy
-import numpy
-from glob import glob
-from PIL import Image, ImageDraw
-from scipy import interpolate
-from scipy.interpolate import splprep, splev
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
+
 from math import floor
+from glob import glob
+from scipy import interpolate
+from PIL import Image, ImageDraw
+from scipy.interpolate import splprep, splev
 
 # Define image dimensions
 IMAGE_HEIGHT = 80 
@@ -54,20 +52,18 @@ def maskSpline(coordinates):
 
 	pts = np.array([x,y]).T
 
-	color = 1
-
 	# mark boundary by value 1 in grayscale
 	for i in range(len(x)):
-		mask[x[i]][y[i]] = color
+		mask[x[i]][y[i]] = 1
 
 
 	# fill mask using scanline  algorithm
 	for i in range(80):
-		itemindex = np.where(mask[i]==color)
+		itemindex = np.where(mask[i]==1)
 		if len(itemindex[0])>1:
 			ind = np.array(itemindex[0])
 			#  make all 1's between boundaries
-			mask[i][ind[0]:ind[-1]+1]=color
+			mask[i][ind[0]:ind[-1]+1]=1
 	return mask
 	
 # return orginal image masked with mask generated
@@ -77,6 +73,13 @@ def returnAnd(im,mask):
 	tem[:,:,1] = im[:,:,1] * mask
 	tem[:,:,2] = im[:,:,2] * mask
 	return tem
+
+# Segments Iris given masks or pupil, iris, lids
+def segmentIris(pupilMask, irisMask, lidsMask):
+	if pupilMask.shape == irisMask.shape ==\
+		lidsMask.shape == (IMAGE_HEIGHT, IMAGE_WIDTH):
+		return (lidsMask*(irisMask-pupilMask))
+	return None
 
 
 images = sorted([y for x in os.walk('./SynthEyes_data/') for y in glob(os.path.join(x[0], '*.png'))])
@@ -91,18 +94,21 @@ for x,y in zip(images,landmarks):
 	for  l in y:
 		k.append((floor(l[1]),floor(l[0])))
 
-	maskIris = maskSpline(coordinates = k)
+	irisMask = maskSpline(coordinates = k)
 	
 	y = x['ldmks']['ldmks_lids_2d']
 	t =[]
 	for  l in y:
 		t.append((floor(l[1]),floor(l[0])))
 
-	masklids = maskSpline(coordinates = t)
+	lidsMask = maskSpline(coordinates = t)
 	y = x['ldmks']['ldmks_pupil_2d']
 	t =[]
 	for  l in y:
 		t.append((floor(l[1]),floor(l[0])))
-	maskPupil = maskSpline(coordinates = t)
+	pupilMask = maskSpline(coordinates = t)
 
+	segmented = segmentIris(pupilMask, irisMask, lidsMask)
+	plt.imshow(segmented, cmap='gray')
+	plt.show()
 	break
