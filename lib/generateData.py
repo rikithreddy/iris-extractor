@@ -1,19 +1,12 @@
-import os
-import cv2
-import pickle
-import numpy
 import numpy as np 
 import matplotlib.pyplot as plt
 
 from math import floor
-from glob import glob
 from scipy import interpolate
 from PIL import Image, ImageDraw
 from scipy.interpolate import splprep, splev
 
-# Define image dimensions
-IMAGE_HEIGHT = 80 
-IMAGE_WIDTH = 120
+from lib.constants import *
 
 # Generates a image and draws a polygon with the given co-ordinates
 def maskpolygon(coordinates):
@@ -81,34 +74,3 @@ def segmentIris(pupilMask, irisMask, lidsMask):
 		return (lidsMask*(irisMask-pupilMask))
 	return None
 
-
-images = sorted([y for x in os.walk('./SynthEyes_data/') for y in glob(os.path.join(x[0], '*.png'))])
-landmarks = sorted([y for x in os.walk('./SynthEyes_data/') for y in glob(os.path.join(x[0], '*.pkl'))])
-
-
-for x,y in zip(images,landmarks):
-	# #open the landmarks for the image 
-	x = pickle.load(open(y,'rb'))
-	y = x['ldmks']['ldmks_iris_2d']
-	k=[]
-	for  l in y:
-		k.append((floor(l[1]),floor(l[0])))
-
-	irisMask = maskSpline(coordinates = k)
-	
-	y = x['ldmks']['ldmks_lids_2d']
-	t =[]
-	for  l in y:
-		t.append((floor(l[1]),floor(l[0])))
-
-	lidsMask = maskSpline(coordinates = t)
-	y = x['ldmks']['ldmks_pupil_2d']
-	t =[]
-	for  l in y:
-		t.append((floor(l[1]),floor(l[0])))
-	pupilMask = maskSpline(coordinates = t)
-
-	segmented = segmentIris(pupilMask, irisMask, lidsMask)
-	plt.imshow(segmented, cmap='gray')
-	plt.show()
-	break
