@@ -2,39 +2,29 @@ import os
 import pickle
 import matplotlib.pyplot as plt
 
-
 from glob import glob
 from math import floor
-from lib import generateData, constants
+from lib import generateData as gen, constants
+
 
 def main():
 	images = sorted([y for x in os.walk('./SynthEyes_data/') for y in glob(os.path.join(x[0], '*.png'))])
 	landmarks = sorted([y for x in os.walk('./SynthEyes_data/') for y in glob(os.path.join(x[0], '*.pkl'))])
 
 
-	for x,y in zip(images,landmarks):
+	for image,landmark in zip(images,landmarks):
 		# #open the landmarks for the image 
-		x = pickle.load(open(y,'rb'))
-		y = x['ldmks']['ldmks_iris_2d']
-		k=[]
-		for  l in y:
-			k.append((floor(l[1]),floor(l[0])))
+		markings = pickle.load(open(landmark,'rb'))
 
-		irisMask = generateData.maskSpline(coordinates = k)
+		iris_coordinates = gen.get_coordinates("iris", markings)
+		lids_coordinates = gen.get_coordinates("lids", markings)
+		pupil_coordinates = gen.get_coordinates("pupil", markings)
 		
-		y = x['ldmks']['ldmks_lids_2d']
-		t =[]
-		for  l in y:
-			t.append((floor(l[1]),floor(l[0])))
-
-		lidsMask = generateData.maskSpline(coordinates = t)
-		y = x['ldmks']['ldmks_pupil_2d']
-		t =[]
-		for  l in y:
-			t.append((floor(l[1]),floor(l[0])))
-		pupilMask = generateData.maskSpline(coordinates = t)
-
-		segmented = generateData.segmentIris(pupilMask, irisMask, lidsMask)
+		irisMask = gen.maskSpline(coordinates = iris_coordinates)
+		pupilMask = gen.maskSpline(coordinates = pupil_coordinates)
+		lidsMask = gen.maskSpline(coordinates = lids_coordinates)
+		
+		segmented = gen.segmentIris(pupilMask, irisMask, lidsMask)
 		plt.imshow(segmented, cmap='gray')
 		plt.show()
 		break

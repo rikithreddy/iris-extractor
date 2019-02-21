@@ -74,3 +74,19 @@ def segmentIris(pupilMask, irisMask, lidsMask):
 		return (lidsMask*(irisMask-pupilMask))
 	return None
 
+# Given pickel file markings and an eye region
+# the function returns co-ordinates of that region
+def get_coordinates(region, markings):
+	key = 'ldmks_{}_2d'
+	if region in ["iris", "pupil", "lids"]:
+			marks = markings['ldmks'][key.format(region)]
+			return get_formatted_coordinates(marks)
+
+# Given co-ordinates of a region returns
+# data list in co-ordinate format
+def get_formatted_coordinates(markings):
+	data=[]
+	for landmark in markings:
+		y,x = map(int, landmark)
+		data.append((x, y))
+	return data
