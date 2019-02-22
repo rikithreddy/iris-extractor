@@ -61,11 +61,11 @@ def maskSpline(coordinates):
 	
 # return orginal image masked with mask generated
 def returnAnd(im,mask):
-	tem=im
-	tem[:,:,0] = im[:,:,0] * mask
-	tem[:,:,1] = im[:,:,1] * mask
-	tem[:,:,2] = im[:,:,2] * mask
-	return tem
+	
+	im[:,:,0] *= mask
+	im[:,:,1] *= mask
+	im[:,:,2] *= mask
+	return im
 
 # Segments Iris given masks or pupil, iris, lids
 def segmentIris(pupilMask, irisMask, lidsMask):
@@ -90,3 +90,22 @@ def get_formatted_coordinates(markings):
 		y,x = map(int, landmark)
 		data.append((x, y))
 	return data
+
+
+
+# The function takes input of the eye shape landmarks of an image and 
+# Returns a iris mask
+def genrate_iris_mask(markings):
+	# Extact iris, pupil, lids coordinates
+	iris_coordinates = get_coordinates("iris", markings)
+	lids_coordinates = get_coordinates("lids", markings)
+	pupil_coordinates = get_coordinates("pupil", markings)
+	
+	# Generate masks for each part
+	irisMask = maskSpline(coordinates = iris_coordinates)
+	pupilMask = maskSpline(coordinates = pupil_coordinates)
+	lidsMask = maskSpline(coordinates = lids_coordinates)
+	
+	# Segment iris region
+	segmented = segmentIris(pupilMask, irisMask, lidsMask)
+	return segmented	

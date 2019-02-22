@@ -1,10 +1,12 @@
 import os
 import pickle
 import matplotlib.pyplot as plt
+import cv2
 
 from glob import glob
 from math import floor
 from lib import generateData as gen, constants
+
 
 
 def main():
@@ -13,18 +15,12 @@ def main():
 
 
 	for image,landmark in zip(images,landmarks):
-		# #open the landmarks for the image 
+		# #open the landmarks for the image
+		img = cv2.imread(image)
 		markings = pickle.load(open(landmark,'rb'))
+		segmented = gen.genrate_iris_mask(markings)
 
-		iris_coordinates = gen.get_coordinates("iris", markings)
-		lids_coordinates = gen.get_coordinates("lids", markings)
-		pupil_coordinates = gen.get_coordinates("pupil", markings)
-		
-		irisMask = gen.maskSpline(coordinates = iris_coordinates)
-		pupilMask = gen.maskSpline(coordinates = pupil_coordinates)
-		lidsMask = gen.maskSpline(coordinates = lids_coordinates)
-		
-		segmented = gen.segmentIris(pupilMask, irisMask, lidsMask)
+		segmented = gen.returnAnd(img, segmented)
 		plt.imshow(segmented, cmap='gray')
 		plt.show()
 		break
