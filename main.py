@@ -20,7 +20,7 @@ def main():
 		markings = pickle.load(open(landmark,'rb'))
 		segmented = gen.genrate_iris_mask(markings)
 
-		segmented = gen.returnAnd(img, segmented)
+		segmented = gen.apply_segment(img, segmented)
 		plt.imshow(segmented, cmap='gray')
 		plt.show()
 		break

@@ -60,7 +60,7 @@ def maskSpline(coordinates):
 	return mask
 	
 # return orginal image masked with mask generated
-def returnAnd(im,mask):
+def apply_segment(im,mask):
 	
 	im[:,:,0] *= mask
 	im[:,:,1] *= mask
