@@ -1,4 +1,8 @@
+import os
+import cv2
+import pickle
 import numpy as np 
+from glob import glob
 import matplotlib.pyplot as plt
 
 from math import floor
@@ -109,3 +113,27 @@ def genrate_iris_mask(markings):
 	# Segment iris region
 	segmented = segmentIris(pupilMask, irisMask, lidsMask)
 	return segmented	
+
+
+
+# Extracts data from input folder and saves in an output path
+
+def segment_folder(input_path, output_path):
+	if not os.path.exists(input_path):
+		print("Invalid input path: %s" % input_path)
+		return
+
+	if not os.path.exists(output_path):
+		print("Invalid output path: '%s'" % output_path)
+		return
+
+	landmarks = sorted([y for x in os.walk(input_path) 
+		for y in glob(os.path.join(x[0], '*.pkl'))])
+
+	for landmark in landmarks:
+		# #open the landmarks for the image
+		file = os.path.basename(landmark)[:-4]
+		path = os.path.join(output_path, file+".jpg")
+		markings = pickle.load(open(landmark,'rb'))
+		segmented = genrate_iris_mask(markings)*255
+		cv2.imwrite(path, segmented)
