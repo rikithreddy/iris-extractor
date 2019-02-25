@@ -1,10 +1,11 @@
 import os
 import cv2
+import click
 import pickle
 import numpy as np 
 from glob import glob
 import matplotlib.pyplot as plt
-
+from tqdm import tqdm
 from math import floor
 from scipy import interpolate
 from PIL import Image, ImageDraw
@@ -117,20 +118,19 @@ def genrate_iris_mask(markings):
 
 
 # Extracts data from input folder and saves in an output path
-
 def segment_folder(input_path, output_path):
 	if not os.path.exists(input_path):
-		print("Invalid input path: %s" % input_path)
+		click.echo("Invalid input path: %s" % input_path)
 		return
 
 	if not os.path.exists(output_path):
-		print("Invalid output path: '%s'" % output_path)
+		click.echo("Invalid output path: '%s'" % output_path)
 		return
 
 	landmarks = sorted([y for x in os.walk(input_path) 
 		for y in glob(os.path.join(x[0], '*.pkl'))])
-
-	for landmark in landmarks:
+	click.echo("Converting files...")
+	for landmark in tqdm(landmarks):
 		# #open the landmarks for the image
 		file = os.path.basename(landmark)[:-4]
 		path = os.path.join(output_path, file+".jpg")
