@@ -118,22 +118,39 @@ def genrate_iris_mask(markings):
 
 
 # Extracts data from input folder and saves in an output path
-def segment_folder(input_path, output_path):
-	if not os.path.exists(input_path):
-		click.echo("Invalid input path: %s" % input_path)
+def segment_folder(input_directory, output_directory):
+	if not os.path.isdir(input_directory):
+		click.echo("Invalid input path: %s" % input_directory)
 		return
 
-	if not os.path.exists(output_path):
-		click.echo("Invalid output path: '%s'" % output_path)
+	if not os.path.isdir(output_directory):
+		click.echo("Invalid output path: '%s'" % output_directory)
 		return
 
-	landmarks = sorted([y for x in os.walk(input_path) 
+	landmarks = ([y for x in os.walk(input_directory) 
 		for y in glob(os.path.join(x[0], '*.pkl'))])
 	click.echo("Converting files...")
 	for landmark in tqdm(landmarks):
-		# #open the landmarks for the image
-		file = os.path.basename(landmark)[:-4]
-		path = os.path.join(output_path, file+".jpg")
-		markings = pickle.load(open(landmark,'rb'))
-		segmented = genrate_iris_mask(markings)*255
-		cv2.imwrite(path, segmented)
+		segment_from_pickle(landmark, output_directory)
+
+# Generates segmented iris region using points from provided pickle file
+def segment_from_pickle(input_file_path, output_directory):
+	if os.path.splitext(input_file_path)[1] != ".pkl":
+		print(os.path.splitext(input_file_path)[1])
+		click.echo("Invalid input file: %s", input_file_path)
+		return
+	if not os.path.isfile(input_file_path): 
+		click.echo("Input file does not exist: %s", input_file_path)
+		return
+
+	if not os.path.isdir(output_directory):
+		click.echo("Output directory does not exist: %s", output_directory)
+		return
+
+	file = os.path.basename(input_file_path)[:-4]
+	path = os.path.join(output_directory, file+".jpg")
+	with open(input_file_path,'rb') as file:
+		markings = pickle.load(file)
+		iris_segment = genrate_iris_mask(markings)*255
+		cv2.imwrite(path, iris_segment)	
+		return iris_segment
