@@ -127,7 +127,7 @@ def segment_folder(input_directory, output_directory):
 		click.echo("Invalid output path: '%s'" % output_directory)
 		return
 
-	landmarks = sorted([y for x in os.walk(input_directory) 
+	landmarks = ([y for x in os.walk(input_directory) 
 		for y in glob(os.path.join(x[0], '*.pkl'))])
 	click.echo("Converting files...")
 	for landmark in tqdm(landmarks):
