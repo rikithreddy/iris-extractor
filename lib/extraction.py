@@ -115,7 +115,9 @@ def genrate_iris_mask(markings):
 	segmented = segmentIris(pupilMask, irisMask, lidsMask)
 	return segmented	
 
-
+# Returns bottom dir name from path
+def get_dir(path):
+	return path.split(os.path.sep)[-1]\
 
 # Extracts data from input folder and saves in an output path
 def segment_folder(input_directory, output_directory):
@@ -127,14 +129,14 @@ def segment_folder(input_directory, output_directory):
 		click.echo("Invalid output path: '%s'" % output_directory)
 		return
 
-	landmarks = ([y for x in os.walk(input_directory) 
+	landmark_info = ([(y, get_dir(x[0])) for x in os.walk(input_directory) 
 		for y in glob(os.path.join(x[0], '*.pkl'))])
 	click.echo("Converting files...")
-	for landmark in tqdm(landmarks):
-		segment_from_pickle(landmark, output_directory)
+	for landmark, sub_dir in tqdm(landmark_info):
+		segment_from_pickle(landmark, output_directory, sub_dir)
 
 # Generates segmented iris region using points from provided pickle file
-def segment_from_pickle(input_file_path, output_directory):
+def segment_from_pickle(input_file_path, output_directory, sub_dir):
 	if os.path.splitext(input_file_path)[1] != ".pkl":
 		print(os.path.splitext(input_file_path)[1])
 		click.echo("Invalid input file: %s", input_file_path)
@@ -147,10 +149,15 @@ def segment_from_pickle(input_file_path, output_directory):
 		click.echo("Output directory does not exist: %s", output_directory)
 		return
 
+	output_path = os.path.join(output_directory, sub_dir)
+	if not os.path.isdir(output_path):
+		os.mkdir(output_path)
+
 	file = os.path.basename(input_file_path)[:-4]
-	path = os.path.join(output_directory, file+".jpg")
+	path = os.path.join(output_path, file+".jpg")
 	with open(input_file_path,'rb') as file:
 		markings = pickle.load(file)
 		iris_segment = genrate_iris_mask(markings)*255
 		cv2.imwrite(path, iris_segment)	
 		return iris_segment
+
